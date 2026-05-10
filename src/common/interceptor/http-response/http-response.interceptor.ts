@@ -23,11 +23,10 @@ export class HttpResponseInterceptor<T> implements NestInterceptor {
   ): Observable<IHttpResponse<T>> {
     const ctx = context.switchToHttp();
     const res = ctx.getResponse<Response>();
-
     return next.handle().pipe(
       map((data: { message: string; data?: T }) => ({
         statusCode: res.statusCode,
-        status: res.statusMessage,
+        status: res.statusMessage ? res.statusMessage : 'success',
         message: data.message || 'Request successful',
         ...(data.data && { data: data.data }),
         timestamp: new Date().toISOString(),

@@ -3,6 +3,9 @@ import { AuthenticationService } from './authentication.service';
 import { AuthenticationController } from './authentication.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { StringValue } from 'ms';
+import { UsersModule } from '../users/users.module';
+import { StateModule } from '../state/state.module';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
@@ -12,6 +15,9 @@ import { StringValue } from 'ms';
         expiresIn: process.env['JWT_EXPIRATION_TIME'] as StringValue,
       },
     }),
+    UsersModule,
+    StateModule,
+    MailModule,
   ],
   controllers: [AuthenticationController],
   providers: [AuthenticationService],
