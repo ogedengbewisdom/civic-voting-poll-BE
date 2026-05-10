@@ -46,7 +46,15 @@ export class AuthGuard implements CanActivate {
         secret: process.env['JWT_SECRET'] as string,
       });
 
-      req.user = payload;
+      req.user = {
+        id: payload.sub,
+        first_name: payload.first_name,
+        last_name: payload.last_name,
+        email: payload.email,
+        state: payload.state,
+        state_id: payload.state_id,
+        role: payload.role,
+      };
 
       return true;
     } catch (error) {
