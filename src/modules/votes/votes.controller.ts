@@ -64,4 +64,11 @@ export class VotesController {
       data,
     };
   }
+
+  @ApiBearerAuth()
+  @Get('/dashboard')
+  async getDashboardData() {
+    const data = await this.votesService.get_dashboard_stats();
+    return { message: 'stats fetched', data };
+  }
 }

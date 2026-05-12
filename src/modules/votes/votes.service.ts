@@ -8,7 +8,7 @@ import {
 import { UpdateVoteDto } from './dto/update-vote.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Vote } from './entities/vote.entity';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import {
   IOptionResult,
   IPollResult,
@@ -22,6 +22,7 @@ import { PollService } from '../poll/poll.service';
 import { PollEnum } from '../poll/interface';
 import { PollOption } from '../poll-options/entities/poll-option.entity';
 import { State } from '../state/entities/state.entity';
+import { Poll } from '../poll/entities/poll.entity';
 
 @Injectable()
 export class VotesService {
@@ -31,6 +32,8 @@ export class VotesService {
     private poll_option_repo: Repository<PollOption>,
     @InjectRepository(State)
     private state_repo: Repository<State>,
+    @InjectRepository(Poll)
+    private poll_repo: Repository<Poll>,
     private poll_service: PollService,
   ) {}
   async create(createVoteDto: IVotes) {
@@ -197,5 +200,30 @@ export class VotesService {
         error?.message || 'Failed to fetch results',
       );
     }
+  }
+
+  async get_dashboard_stats() {
+    const [active_polls, total_votes, states_reached] =
+      await Promise.allSettled([
+        this.poll_repo.count({
+          where: { status: PollEnum.ACTIVE, deleted_at: IsNull() },
+        }),
+        this.vote_repo.count(),
+
+        this.vote_repo
+          .createQueryBuilder('vote')
+          .select('COUNT(DISTINCT vote.state_id)', 'count')
+          .getRawOne()
+          .then((r) => Number(r.count)),
+      ]);
+
+    return {
+      active_polls:
+        active_polls.status === 'fulfilled' ? active_polls.value : null,
+      total_votes:
+        total_votes.status === 'fulfilled' ? total_votes.value : null,
+      states_reached:
+        states_reached.status === 'fulfilled' ? states_reached.value : null,
+    };
   }
 }
