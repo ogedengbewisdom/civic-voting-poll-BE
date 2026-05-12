@@ -8,9 +8,12 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Poll } from '../../../modules/poll/entities/poll.entity';
+import { Vote } from '../../../modules/votes/entities/vote.entity';
 
 // Users (id, name, email, password, state, role)
 
@@ -38,9 +41,15 @@ export class User {
   @Column({ name: 'state_id' })
   state_id: number;
 
+  @OneToMany(() => Vote, (vote) => vote.user)
+  votes: Vote[];
+
   @ManyToOne(() => State, (state) => state.user)
   @JoinColumn({ name: 'state_id' })
   state: State;
+
+  @OneToMany(() => Poll, (poll) => poll.user)
+  created_by: Poll[];
 
   @CreateDateColumn()
   created_at: Date;
