@@ -13,7 +13,7 @@ import {
 import { Poll } from '../../../modules/poll/entities/poll.entity';
 import { Vote } from '../../../modules/votes/entities/vote.entity';
 
-@Entity('pollOptions', { orderBy: { created_at: 'DESC' } })
+@Entity('poll_options', { orderBy: { created_at: 'DESC' } })
 export class PollOption {
   @PrimaryGeneratedColumn()
   id: number;

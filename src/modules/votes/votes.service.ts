@@ -5,7 +5,6 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { UpdateVoteDto } from './dto/update-vote.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Vote } from './entities/vote.entity';
 import { IsNull, Repository } from 'typeorm';
@@ -63,7 +62,7 @@ export class VotesService {
       const cast_vote = this.vote_repo.create(createVoteDto);
       const saved_vote = await this.vote_repo.save(cast_vote);
 
-      return await this.find_one(saved_vote.id);
+      return await this.find_one(saved_vote.poll_id, saved_vote.user_id);
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new InternalServerErrorException(
@@ -72,8 +71,18 @@ export class VotesService {
     }
   }
 
-  async find_one(id: number) {
-    return await this.vote_repo.findOne({ where: { id } });
+  async find_one(poll_id: number, user_id: number) {
+    return await this.vote_repo.findOne({
+      where: { poll_id, user_id },
+      relations: { state: true },
+      select: {
+        id: true,
+        user_id: true,
+        poll_id: true,
+        option_id: true,
+        state: { name: true },
+      },
+    });
   }
 
   async findAll(poll_id: number, state_id?: number): Promise<IPollResult> {
@@ -91,14 +100,13 @@ export class VotesService {
         .leftJoin(
           'option.votes',
           'vote',
-          // ← both poll_id and state_id filter inside the JOIN, not WHERE
           state_id
             ? 'vote.poll_id = :poll_id AND vote.state_id = :state_id'
             : 'vote.poll_id = :poll_id',
           state_id ? { poll_id, state_id } : { poll_id },
         )
         .leftJoin('vote.state', 'state')
-        .where('option.poll_id = :poll_id', { poll_id }) // ← only this in WHERE
+        .where('option.poll_id = :poll_id', { poll_id })
         .groupBy('option.id')
         .addGroupBy('option.option_text')
         .addGroupBy('vote.state_id')
@@ -149,21 +157,13 @@ export class VotesService {
         .addGroupBy('state.name')
         .getRawMany();
 
-      // const all_states: IState[] = all_states_raw
-      //   .map((row) => ({
-      //     state_id: Number(row.state_id),
-      //     state_name: row.state_name,
-      //     count: Number(row.count),
-      //   }))
-      //   .sort((a, b) => b.count - a.count);
-
       const all_states: IState[] = all_states_raw
         .map((row) => ({
           state_id: Number(row.state_id),
           state_name: row.state_name,
           count: Number(row.count),
         }))
-        .filter((s) => (state_id ? s.state_id === Number(state_id) : true)) // ← add this
+        .filter((s) => (state_id ? s.state_id === Number(state_id) : true))
         .sort((a, b) => b.count - a.count);
 
       const total_votes = grouped.reduce((sum, o) => sum + o.total_votes, 0);
@@ -174,7 +174,11 @@ export class VotesService {
           (max, o) => (o.total_votes > max.total_votes ? o : max),
           grouped[0],
         )?.option_text,
-        states_voting: [...new Set(raw.map((r) => r.state_id))].length,
+        states_voting: new Set(
+          raw
+            .filter((data) => data.state_id !== null)
+            .map((data) => data.state_id),
+        ).size,
       };
 
       const results: IPollResultOption[] = grouped.map((option) => ({
@@ -225,5 +229,9 @@ export class VotesService {
       states_reached:
         states_reached.status === 'fulfilled' ? states_reached.value : null,
     };
+  }
+
+  async has_voted(poll_id: number, user_id: number) {
+    return await this.find_one(poll_id, user_id);
   }
 }

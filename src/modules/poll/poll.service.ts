@@ -10,7 +10,7 @@ import { CreatePollDto } from './dto/create-poll.dto';
 import { UpdatePollDto } from './dto/update-poll.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Poll } from './entities/poll.entity';
-import { DataSource, IsNull, Repository } from 'typeorm';
+import { DataSource, ILike, IsNull, Repository } from 'typeorm';
 import { PollOption } from '../poll-options/entities/poll-option.entity';
 import { PollEnum } from './interface';
 // import { USERSTATUS } from './interface';
@@ -54,19 +54,30 @@ export class PollService {
     }
   }
 
-  async findAll(page: number, limit: number) {
+  async findAll(page: number, limit: number, search?: string) {
     const skip = (page - 1) * limit;
+
     try {
       const [data, total] = await this.poll_repo.findAndCount({
-        // relations: { poll_option: true },
-        where: { deleted_at: IsNull() },
+        relations: { user: true, poll_option: true },
+        select: {
+          user: { first_name: true, last_name: true, email: true },
+          poll_option: { id: true },
+        },
+        where: {
+          deleted_at: IsNull(),
+          ...(search ? { title: ILike(`%${search}%`) } : {}),
+        },
         skip,
         take: limit,
       });
 
       const mapped_data = data.map((mp) => {
-        const { created_by, deleted_at, ...rest } = mp;
-        return rest;
+        const { deleted_at, poll_option, created_by, ...rest } = mp;
+        return {
+          ...rest,
+          poll_option_count: poll_option.length,
+        };
       });
       const total_pages = Math.ceil(total / limit);
 
@@ -76,6 +87,7 @@ export class PollService {
           total,
           total_pages,
           page,
+          limit,
           has_next_page: page < total_pages,
           has_previous_page: page > 1,
         },
@@ -92,6 +104,7 @@ export class PollService {
     try {
       const [data, total] = await this.poll_repo.findAndCount({
         where: { status: PollEnum.ACTIVE, deleted_at: IsNull() },
+        relations: { poll_option: true },
         skip,
         take: limit,
       });
@@ -108,6 +121,7 @@ export class PollService {
           total,
           total_pages,
           page,
+          limit,
           has_next_page: page < total_pages,
           has_previous_page: page > 1,
         },

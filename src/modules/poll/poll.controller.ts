@@ -26,7 +26,7 @@ import {
 import { RoleGuard } from '../../common/guard/role/role.guard';
 import { Roles } from '../../common/decorators/role.decorator';
 import { UserRole } from '../../common/interface/jwt.payload';
-import { QueryDto } from './dto/query.dto';
+import { QueryDto, SearchQueryDto } from './dto/query.dto';
 import { PollOption } from '../poll-options/entities/poll-option.entity';
 
 type PollOptionWithVoteCount = PollOption & {
@@ -59,13 +59,15 @@ export class PollController {
   @ApiResponse({ status: 200, description: 'Fetched' })
   @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
+  @ApiQuery({ name: 'search', required: false, type: String })
   @UseGuards(RoleGuard)
   @Roles(UserRole.ADMIN)
   @Get()
-  async findAll(@Query() query: QueryDto) {
+  async findAll(@Query() query: SearchQueryDto) {
     const page = query.page || 1;
     const limit = query.limit || 10;
-    const data = await this.pollService.findAll(page, limit);
+    const search = query.search;
+    const data = await this.pollService.findAll(page, limit, search);
 
     // const mapped_data = data.data.map((md) => {
     //   const {pagination} = md

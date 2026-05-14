@@ -17,7 +17,6 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { QueryDto } from '../poll/dto/query.dto';
 
 @ApiTags('Votes')
 @Controller({ path: 'votes', version: '1' })
@@ -45,6 +44,23 @@ export class VotesController {
 
     return {
       message: 'Poll casted successfully',
+      data,
+    };
+  }
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'check your vote' })
+  @ApiResponse({ status: 200, description: 'Vote checked' })
+  @Get('poll/:poll_id/check')
+  async hasVoted(
+    @Request() req,
+    @Param('poll_id', ParseIntPipe) poll_id: number,
+  ) {
+    const user_id = Number(req.user?.id);
+
+    const data = await this.votesService.has_voted(poll_id, user_id);
+
+    return {
+      message: 'Checked',
       data,
     };
   }
