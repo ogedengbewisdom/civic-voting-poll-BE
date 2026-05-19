@@ -223,7 +223,7 @@ npm run migration:revert
 
 - Users can only vote **once per poll** — enforced at application and database level
 - Only **admin** users can create, edit, activate, close, or delete polls
-- Polls can only be edited when in **DRAFT** status
+- Newly created polls have draft default status, admin can activate so it can be available in active polls
 - Votes record the user's **state at time of voting** for regional analytics so updating state after voting does not affect the vote state aggregation
 - Passwords are hashed with **bcrypt** before storage
 - Password reset tokens expire in **5 minutes**
@@ -236,7 +236,7 @@ npm run migration:revert
 | Role    | Description                                                  |
 | ------- | ------------------------------------------------------------ |
 | `user`  | Register, login, view active polls, cast votes, view results |
-| `admin` | All user permissions + full poll management + view all users |
+| `admin` | All user permissions + full poll management |
 
 ---
 
