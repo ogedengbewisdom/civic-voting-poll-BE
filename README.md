@@ -15,6 +15,7 @@ A RESTful API for the CivicPoll civic engagement platform. Built with NestJS, Po
 | Bcrypt               | Password hashing  |
 | Nodemailer + Mailgun | Email delivery    |
 | Swagger              | API documentation |
+| winston              | logger            |
 
 ---
 
@@ -24,9 +25,11 @@ A RESTful API for the CivicPoll civic engagement platform. Built with NestJS, Po
 src/
 ├── common/
 │   ├── decorators/        # @Roles, @Public decorators
+│   ├── filter/            # http error filter
 │   ├── guard/             # AuthGuard, RoleGuard
 │   ├── interceptors/      # Response interceptor
-│   ├── interface/         # JWT payload interface
+│   ├── interface/         # interface
+│   ├── logger/            # winston config logger
 │   ├── middleware/        # Request logger
 │   └── pipe/              # ParamsPipe
 │
