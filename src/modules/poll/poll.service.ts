@@ -41,10 +41,7 @@ export class PollService {
 
         await txn.save(created_poll_options);
 
-        return await txn.findOne(Poll, {
-          where: { id: saved_poll.id },
-          relations: { poll_option: true },
-        });
+        return true;
       });
     } catch (error) {
       if (error instanceof HttpException) throw error;
@@ -146,7 +143,7 @@ export class PollService {
         .addSelect(['creator.first_name', 'creator.last_name'])
         .loadRelationCountAndMap('option.vote_count', 'option.votes')
         .where('poll.id = :id', { id })
-        .andWhere('poll.status = :status', { status: PollEnum.ACTIVE })
+        // .andWhere('poll.status = :status', { status: PollEnum.ACTIVE })
         .getOne();
 
       return poll;
@@ -191,31 +188,34 @@ export class PollService {
             'Poll not found or poll not created by you',
           );
 
-        if (poll.status === PollEnum.ACTIVE)
-          throw new BadRequestException(
-            'Cannot update an active poll — close it first',
-          );
+        // if (poll.status === PollEnum.ACTIVE)
+        //   throw new BadRequestException(
+        //     'Cannot update an active poll — close it first',
+        //   );
 
-        if (poll.status === PollEnum.CLOSED)
-          throw new BadRequestException('Cannot update a closed poll');
+        // if (poll.status === PollEnum.CLOSED)
+        //   throw new BadRequestException('Cannot update a closed poll');
 
         await txn.update(Poll, id, { ...rest });
 
         if (poll_options && poll_options.length > 0) {
-          await txn.softDelete(PollOption, { poll_id: id });
-          const new_poll_option = poll_options.map((option) =>
-            txn.create(PollOption, {
-              option_text: option,
-              poll_id: id,
-            }),
-          );
-
-          await txn.save(new_poll_option);
+          for (const option of poll_options) {
+            if (option.id) {
+              await txn.update(
+                PollOption,
+                { id: option.id, poll_id: id },
+                { option_text: option.option_text },
+              );
+            } else {
+              const new_option = txn.create(PollOption, {
+                option_text: option.option_text,
+                poll_id: id,
+              });
+              await txn.save(new_option);
+            }
+          }
         }
-        return await txn.findOne(Poll, {
-          where: { id },
-          relations: { poll_option: true },
-        });
+        return true;
       });
     } catch (error) {
       if (error instanceof HttpException) throw error;
@@ -234,7 +234,7 @@ export class PollService {
           `Access denied, poll not created by user ${user_id}`,
         );
       await this.poll_repo.softDelete(id);
-      return poll.id;
+      return true;
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new InternalServerErrorException(
@@ -261,7 +261,7 @@ export class PollService {
         status: PollEnum.CLOSED,
       });
 
-      return await this.findOne(id);
+      return true;
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new InternalServerErrorException(
@@ -278,8 +278,8 @@ export class PollService {
           `Access denied, poll not created by user ${user_id}`,
         );
 
-      if (poll.status === PollEnum.CLOSED)
-        throw new BadRequestException(`Poll ${id} closed already`);
+      // if (poll.status === PollEnum.CLOSED)
+      //   throw new BadRequestException(`Poll ${id} closed already`);
 
       if (poll.status === PollEnum.ACTIVE)
         throw new BadRequestException(`Poll ${id} active already`);
@@ -288,7 +288,7 @@ export class PollService {
         status: PollEnum.ACTIVE,
       });
 
-      return await this.findOne(id);
+      return true;
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new InternalServerErrorException(

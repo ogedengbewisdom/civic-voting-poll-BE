@@ -1,98 +1,245 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# CivicPoll — Backend API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A RESTful API for the CivicPoll civic engagement platform. Built with NestJS, PostgreSQL, and TypeORM.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## Tech Stack
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+| Technology           | Purpose           |
+| -------------------- | ----------------- |
+| NestJS               | Backend framework |
+| PostgreSQL           | Database          |
+| TypeORM              | ORM + Migrations  |
+| JWT                  | Authentication    |
+| Bcrypt               | Password hashing  |
+| Nodemailer + Mailgun | Email delivery    |
+| Swagger              | API documentation |
 
-## Project setup
+---
 
-```bash
-$ npm install
+## Project Structure
+
+```
+src/
+├── common/
+│   ├── decorators/        # @Roles, @Public decorators
+│   ├── guard/             # AuthGuard, RoleGuard
+│   ├── interceptors/      # Response interceptor
+│   ├── interface/         # JWT payload interface
+│   ├── middleware/        # Request logger
+│   └── pipe/              # ParamsPipe
+│
+├── modules/
+│   ├── authentication/    # Login, register, forgot/reset password
+│   ├── mail/              # Mailgun email service
+│   ├── poll/              # Poll CRUD + activate/close
+│   ├── poll-options/      # PollOption entity
+│   ├── state/             # Nigerian states
+│   ├── users/             # User profile + management
+│   └── votes/             # Cast vote + results
+│
+├── migrations/            # TypeORM migration files
+├── types/                 # Global type declarations
+├── app.module.ts
+├── app.controller.ts
+├── app.service.ts
+├── data-source.ts         # TypeORM DataSource config
+└── main.ts
 ```
 
-## Compile and run the project
+---
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js v18+
+- PostgreSQL database
+- Mailgun account (for email)
+
+### Installation
+
+```bash
+# clone the repo
+git clone https://github.com/ogedengbewisdom/civic-voting-poll-BE.git
+cd civic-voting-poll-BE
+
+# install dependencies
+npm install
+
+# create environment file
+cp .env.sample .env
+```
+
+### Environment Variables
+
+Fill in your `.env` file:
+
+```env
+# App
+NODE_ENV=development
+PORT=3000
+
+# Database
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=your_password
+DB_NAME=civic_poll_db
+
+# Production only
+DATABASE_URL=postgresql://user:password@host/dbname
+
+# JWT
+JWT_SECRET=your_jwt_secret
+JWT_EXPIRATION_TIME=1h
+JWT_RESET_PASSWORD_SECRET=your_reset_secret
+JWT_RESET_PASSWORD_EXPIRATION_TIME=5m
+
+# Mailgun
+MAILGUN_API_KEY=your_mailgun_api_key
+MAILGUN_DOMAIN=your_mailgun_sandbox_domain
+
+# Frontend
+FE_BASE_URL=http://localhost:4200
+```
+
+### Database Setup
+
+```bash
+# run migrations
+npm run migration:run
+```
+
+### Running the App
 
 ```bash
 # development
-$ npm run start
+npm run start:dev
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+# production
+npm run build
+npm run start:prod
 ```
 
-## Run tests
+Server runs on `http://localhost:3000`
+
+API docs available at `http://localhost:3000/api/docs`
+
+---
+
+## API Endpoints
+
+### Authentication (Public)
+
+| Method | Endpoint                             | Description               |
+| ------ | ------------------------------------ | ------------------------- |
+| POST   | `/api/v1              `              | Check app health status   |
+| POST   | `/api/v1/auth/register`              | Register new user         |
+| POST   | `/api/v1/auth/login`                 | Login                     |
+| POST   | `/api/v1/auth/forgot-password`       | Send password reset email |
+| POST   | `/api/v1/auth/reset-password/:token` | Reset password            |
+
+### Users (Protected)
+
+| Method | Endpoint                | Description        | Role  |
+| ------ | ----------------------- | ------------------ | ----- |
+| GET    | `/api/v1/users`         | Get all users      | Admin |
+| GET    | `/api/v1/users/profile` | Get own profile    | User  |
+| PUT    | `/api/v1/users/profile` | Update own profile | User  |
+
+### State
+
+| Method | Endpoint        | Description               |
+| ------ | --------------- | ------------------------- |
+| GET    | `/api/v1/state` | Get all states in Nigeria |
+
+### Polls (Admin only)
+
+| Method | Endpoint                    | Description                          |
+| ------ | --------------------------- | ------------------------------------ |
+| GET    | `/api/v1/poll`              | Get all polls with pagination        |
+| GET    | `/api/v1/poll/active`       | Get all active polls with pagination |
+| POST   | `/api/v1/poll`              | Create new poll with options         |
+| GET    | `/api/v1/poll/:id`          | Get poll by ID                       |
+| GET    | `/api/v1/poll/:id/active`   | Get active poll by ID                |
+| PATCH  | `/api/v1/poll/:id`          | Update poll and options              |
+| DELETE | `/api/v1/poll/:id`          | Soft delete poll                     |
+| PATCH  | `/api/v1/poll/:id/activate` | Activate poll                        |
+| PATCH  | `/api/v1/poll/:id/close`    | Close poll                           |
+
+### Votes (Protected)
+
+| Method | Endpoint                                        | Description        |
+| ------ | ----------------------------------------------- | ------------------ |
+| POST   | `/api/v1/votes/poll/:poll_id/option/:option_id` | Cast a vote        |
+| GET    | `/api/v1/votes/poll/:poll_id/check`             | check vote         |
+| GET    | `/api/v1/votes/:poll_id/results`                | Get poll results   |
+| GET    | `/api/v1/votes/dashboard`                       | Get vote dashboard |
+
+---
+
+## Database Schema
+
+```
+states       — id, name
+             — one state → many users
+             — one state → many votes
+
+users        — id, first_name, last_name, email, password, role, state_id (FK → states)
+             — one user → many votes
+             — one user → many polls (created)
+
+poll         — id, title, description, status (draft|active|closed), created_by (FK → users)
+             — one poll → many poll_options
+             — one poll → many votes
+
+poll_options — id, poll_id (FK → poll), option_text
+             — one option → many votes
+
+votes        — id, user_id (FK → users), poll_id (FK → poll), option_id (FK → poll_options), state_id (FK → states)
+             — unique: user_id + poll_id (one vote per user per poll)
+```
+
+---
+
+## Migrations
 
 ```bash
-# unit tests
-$ npm run test
+# generate new migration after entity changes
+npm run migration:generate --src/migrations/migrationName
 
-# e2e tests
-$ npm run test:e2e
+# run all pending migrations
+npm run migration:run
 
-# test coverage
-$ npm run test:cov
+# revert last migration
+npm run migration:revert
 ```
 
-## Deployment
+---
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## Business Rules
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+- Users can only vote **once per poll** — enforced at application and database level
+- Only **admin** users can create, edit, activate, close, or delete polls
+- Polls can only be edited when in **DRAFT** status
+- Votes record the user's **state at time of voting** for regional analytics so updating state after voting does not affect the vote state aggregation
+- Passwords are hashed with **bcrypt** before storage
+- Password reset tokens expire in **5 minutes**
+- Access tokens expire in **1 hour**
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+---
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## User Roles
 
-## Resources
+| Role    | Description                                                  |
+| ------- | ------------------------------------------------------------ |
+| `user`  | Register, login, view active polls, cast votes, view results |
+| `admin` | All user permissions + full poll management + view all users |
 
-Check out a few resources that may come in handy when working with NestJS:
+---
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+## Author
 
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Built by **Wisdom Ogedengbe** as a capstone project for the Seamfix Developer Program.
