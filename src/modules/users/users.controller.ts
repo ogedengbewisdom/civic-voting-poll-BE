@@ -9,6 +9,7 @@ import {
   Query,
   Put,
   Patch,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -21,7 +22,7 @@ import {
 import { RoleGuard } from '../../common/guard/role/role.guard';
 import { Roles } from '../../common/decorators/role.decorator';
 import { UserRole } from '../../common/interface/jwt.payload';
-import { ParamsPipe } from '../../common/pipe/params/params.pipe';
+// import { ParseIntPipe } from '../../common/pipe/params/params.pipe';
 import type { Request } from 'express';
 import type { IQueryPagination } from '../../common/interface/query';
 import { AuthGuard } from '../../common/guard/auth/auth.guard';
@@ -85,7 +86,7 @@ export class UsersController {
   @Delete(':user_id')
   async remove(
     @Req() req: Request,
-    @Param('user_id', ParamsPipe) user_id: number,
+    @Param('user_id', ParseIntPipe) user_id: number,
   ) {
     const data = await this.users_service.remove(user_id);
     return {
@@ -102,7 +103,7 @@ export class UsersController {
   @UseGuards(AuthGuard)
   @Roles(UserRole.ADMIN)
   @Patch('restore/:user_id')
-  async restore(@Param('user_id', ParamsPipe) user_id: number) {
+  async restore(@Param('user_id', ParseIntPipe) user_id: number) {
     const data = await this.users_service.restore(user_id);
     return {
       message: 'User profile restored successfully',
@@ -119,7 +120,7 @@ export class UsersController {
   @Roles(UserRole.ADMIN)
   @Patch('assign-role/:user_id')
   async assignRole(
-    @Param('user_id', ParamsPipe) user_id: number,
+    @Param('user_id', ParseIntPipe) user_id: number,
     @Body() assign_role_dto: AssignRoleDto,
   ) {
     const data = await this.users_service.assign_role(user_id, assign_role_dto);

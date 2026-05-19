@@ -9,6 +9,8 @@ import { AuthenticationModule } from './modules/authentication/authentication.mo
 import { StateModule } from './modules/state/state.module';
 import { UsersModule } from './modules/users/users.module';
 import Joi from 'joi';
+import { PollModule } from './modules/poll/poll.module';
+import { VotesModule } from './modules/votes/votes.module';
 
 @Module({
   imports: [
@@ -52,6 +54,8 @@ import Joi from 'joi';
     AuthenticationModule,
     StateModule,
     UsersModule,
+    PollModule,
+    VotesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
