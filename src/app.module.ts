@@ -25,11 +25,12 @@ import { VotesModule } from './modules/votes/votes.module';
         PORT: Joi.number().default(3000),
 
         // Database
-        DB_HOST: Joi.string().required(),
-        DB_PORT: Joi.number().required(),
-        DB_USERNAME: Joi.string().required(),
-        DB_PASSWORD: Joi.string().required(),
-        DB_NAME: Joi.string().required(),
+        // DB_HOST: Joi.string().required(),
+        // DB_PORT: Joi.number().required(),
+        // DB_USERNAME: Joi.string().required(),
+        // DB_PASSWORD: Joi.string().required(),
+        // DB_NAME: Joi.string().required(),
+        DATABASE_URL: Joi.string().required(),
 
         // JWT
         JWT_SECRET: Joi.string().required(),
